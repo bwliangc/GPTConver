@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPTConver</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080d19;
+        --bg2: #10182f;
+        --panel: rgba(18, 26, 49, 0.9);
+        --panel2: rgba(13, 20, 39, 0.92);
+        --line: #24365f;
+        --line2: #36528e;
+        --text: #edf2ff;
+        --muted: #9caeda;
+        --soft: #cfdaff;
+        --accent: #7c9cff;
+        --accent2: #58d3ff;
+        --ok: #39d98a;
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.32);
+        --radius: 18px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--text);
+        background:
+          radial-gradient(circle at 18% -10%, rgba(124, 156, 255, 0.23), transparent 34%),
+          radial-gradient(circle at 90% 8%, rgba(88, 211, 255, 0.16), transparent 30%),
+          linear-gradient(180deg, var(--bg), #0b1020 38%, var(--bg2));
+      }
+
+      button, select, textarea { font: inherit; }
+      button, select { outline: none; }
+      button { cursor: pointer; }
+
+      .wrap {
+        width: min(1240px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 30px 0 34px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: end;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent2);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 5vw, 46px);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .desc {
+        max-width: 780px;
+        margin: 12px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 15px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 6px 10px;
+        border: 1px solid rgba(124, 156, 255, 0.28);
+        border-radius: 999px;
+        background: rgba(124, 156, 255, 0.08);
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 12px;
+        align-items: end;
+        margin: 20px 0 14px;
+        padding: 14px;
+        border: 1px solid rgba(54, 82, 142, 0.65);
+        border-radius: 22px;
+        background: rgba(12, 18, 36, 0.68);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .field { display: grid; gap: 8px; }
+      .label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .selectWrap { position: relative; }
+      .selectWrap::after {
+        content: "⌄";
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-54%);
+        color: var(--muted);
+        pointer-events: none;
+        font-size: 18px;
+      }
+
+      select {
+        width: 100%;
+        min-height: 52px;
+        appearance: none;
+        border: 1px solid var(--line2);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #14203e, #101832);
+        color: var(--text);
+        padding: 0 44px 0 16px;
+        font-size: 15px;
+        font-weight: 800;
+      }
+      select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 156, 255, 0.15); }
+
+      .swapBtn {
+        width: 52px;
+        height: 52px;
+        border: 1px solid var(--line2);
+        border-radius: 999px;
+        background: linear-gradient(135deg, #5a7dff, #58d3ff);
+        color: white;
+        font-size: 21px;
+        font-weight: 900;
+        box-shadow: 0 12px 30px rgba(90, 125, 255, 0.28);
+      }
+      .swapBtn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+      .actionsBar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .leftActions, .rightActions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+      .btn {
+        min-height: 40px;
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        background: rgba(24, 36, 70, 0.78);
+        color: var(--text);
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .btn:hover { border-color: var(--accent); background: rgba(31, 48, 94, 0.92); }
+      .btn.primary { border: 0; background: linear-gradient(135deg, #5a7dff, #7c9cff); color: white; }
+      .btn.subtle { background: transparent; }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 6px 10px;
+        border: 1px solid rgba(54, 82, 142, 0.7);
+        border-radius: 999px;
+        background: rgba(13, 20, 39, 0.72);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .card {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid rgba(54, 82, 142, 0.72);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .cardHead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(54, 82, 142, 0.45);
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .cardTitle {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 900;
+      }
+      .dot { width: 9px; height: 9px; border-radius: 99px; background: var(--accent2); box-shadow: 0 0 0 5px rgba(88, 211, 255, 0.12); }
+      .cardActions { display: flex; gap: 8px; align-items: center; }
+
+      .cardBody { padding: 14px; }
+
+      textarea, pre {
+        width: 100%;
+        margin: 0;
+        border: 1px solid rgba(42, 58, 105, 0.98);
+        border-radius: 14px;
+        background: var(--panel2);
+        color: var(--text);
+        padding: 14px;
+        font: 13px/1.62 var(--mono);
+        outline: none;
+      }
+
+      textarea {
+        min-height: 500px;
+        resize: vertical;
+      }
+      textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 156, 255, 0.13); }
+
+      pre {
+        min-height: 500px;
+        max-height: 650px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .hint {
+        margin: 12px 2px 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 920px) {
+        .hero { grid-template-columns: 1fr; }
+        .chips { justify-content: flex-start; }
+        .toolbar { grid-template-columns: 1fr; }
+        .swapBtn { justify-self: center; transform: rotate(90deg); }
+        .swapBtn:hover { transform: rotate(90deg) translateY(-1px); }
+        .grid { grid-template-columns: 1fr; }
+        textarea, pre { min-height: 380px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Local Token Converter</p>
+          <h1>GPTConver</h1>
+          <p class="desc">纯前端本地转换，不上传敏感 token。支持 ChatGPT Session / CPA / sub2 / Cockpit / 9router 多种 JSON 格式互转。</p>
+        </div>
+        <div class="chips" aria-label="支持格式">
+          <span class="chip">Session</span>
+          <span class="chip">CPA</span>
+          <span class="chip">sub2</span>
+          <span class="chip">Cockpit</span>
+          <span class="chip">9router</span>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="转换设置">
+        <div class="field">
+          <label class="label" for="leftType">源类型</label>
+          <div class="selectWrap">
+            <select id="leftType">
+              <option value="auto">自动识别</option>
+              <option value="session">ChatGPT Session</option>
+              <option value="cpa">CPA</option>
+              <option value="sub2">sub2</option>
+              <option value="cockpit">Cockpit</option>
+              <option value="9router">9router</option>
+            </select>
+          </div>
+        </div>
+        <button id="swapDirection" class="swapBtn" type="button" aria-label="交换方向">⇄</button>
+        <div class="field">
+          <label class="label" for="rightType">目标类型</label>
+          <div class="selectWrap">
+            <select id="rightType">
+              <option value="sub2">sub2</option>
+              <option value="cpa">CPA</option>
+              <option value="cockpit">Cockpit</option>
+              <option value="9router">9router</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="actionsBar">
+        <div class="leftActions">
+          <input id="files" type="file" multiple accept=".json,application/json" style="display:none" />
+          <button id="pickFiles" class="btn primary" type="button">选择 JSON</button>
+          <button id="clearInput" class="btn subtle" type="button">清空输入</button>
+        </div>
+        <span id="status" class="status">等待输入</span>
+      </div>
+
+      <section class="grid">
+        <article class="card">
+          <div class="cardHead">
+            <div class="cardTitle"><span class="dot"></span><span>输入</span></div>
+          </div>
+          <div class="cardBody">
+            <textarea id="input" placeholder="粘贴 Session / CPA / sub2 / Cockpit / 9router JSON..."></textarea>
+            <p class="hint">支持粘贴 JSON，或导入一个/多个 JSON 文件。全部转换都在浏览器本地完成。</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="cardHead">
+            <div class="cardTitle"><span class="dot"></span><span>输出</span></div>
+            <div class="cardActions">
+              <button id="copyOutput" class="btn subtle" type="button">复制</button>
+              <button id="download" class="btn subtle" type="button">下载结果</button>
+            </div>
+          </div>
+          <div class="cardBody">
+            <pre id="output">{}</pre>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
