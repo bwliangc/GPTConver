@@ -257,20 +257,20 @@ function toCpaRecord(n) {
   const accessToken = first(n.accessToken);
   if (!accessToken) throw new Error('缺少 accessToken/access_token');
   const refreshToken = first(n.refreshToken);
-  const idToken = resolveIdToken(n, { synthesize: false });
-  return strip({
+  const idToken = resolveIdToken(n, { synthesize: true });
+  const out = strip({
     access_token: accessToken,
     account_id: n.accountId,
     email: n.email,
     expired: n.expiresAt,
     id_token: idToken,
-    id_token_synthetic: Boolean(n.idTokenSynthetic),
+    id_token_synthetic: idToken && idToken !== first(n.idToken),
     last_refresh: n.lastRefresh,
-    refresh_token: refreshToken,
-    session_token: first(n.sessionToken),
     plan_type: n.planType,
     type: 'codex',
   });
+  out.refresh_token = refreshToken || '';
+  return out;
 }
 
 function toSub2Account(n) {
@@ -312,7 +312,6 @@ function toCockpitRecord(n) {
   if (!accessToken) throw new Error('缺少 accessToken/access_token');
   const out = {
     access_token: accessToken,
-    session_token: first(n.sessionToken),
     account_id: n.accountId,
     email: n.email,
     expired: n.expiresAt,
@@ -321,10 +320,10 @@ function toCockpitRecord(n) {
     type: 'codex',
   };
   const refreshToken = first(n.refreshToken);
-  if (refreshToken) out.refresh_token = refreshToken;
-  const idToken = resolveIdToken(n, { synthesize: false });
+  out.refresh_token = refreshToken || '';
+  const idToken = resolveIdToken(n, { synthesize: true });
   if (idToken) out.id_token = idToken;
-  if (n.idTokenSynthetic) out.id_token_synthetic = true;
+  if (idToken && idToken !== first(n.idToken)) out.id_token_synthetic = true;
   return strip(out);
 }
 
