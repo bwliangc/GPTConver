@@ -320,11 +320,12 @@ function toCockpitRecord(n) {
     type: 'codex',
   };
   const refreshToken = first(n.refreshToken);
-  out.refresh_token = refreshToken || '';
   const idToken = resolveIdToken(n, { synthesize: true });
   if (idToken) out.id_token = idToken;
   if (idToken && idToken !== first(n.idToken)) out.id_token_synthetic = true;
-  return strip(out);
+  const stripped = strip(out);
+  stripped.refresh_token = refreshToken || '';
+  return stripped;
 }
 
 function to9routerRecord(n) {
